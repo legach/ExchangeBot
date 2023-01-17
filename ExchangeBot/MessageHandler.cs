@@ -12,6 +12,13 @@ namespace ExchangeBot
 {
     public class MessageHandler
     {
+        private readonly DataRetriever _dataRetriever;
+
+        public MessageHandler(DataRetriever dataRetriever)
+        {
+            _dataRetriever = dataRetriever;
+        }
+
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Only process Message updates: https://core.telegram.org/bots/api#message
@@ -25,10 +32,24 @@ namespace ExchangeBot
 
             Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-            // Echo received message text
+            var responseText = "Sorry, I don't understand you :(";
+            if (messageText == "/getAll")
+            {
+                try
+                {
+                    var rates = _dataRetriever.GetAllRates();
+                    responseText = string.Join("\n", rates.Select(r => $"{r.Company.Name} Sale:{r.Sales[Currency.Euro]}"));
+                }
+                catch (Exception e)
+                {
+                    responseText = "Sorry, I have an internal problem :(";
+                }
+
+            }
+            
             Message sentMessage = await botClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: "You said:\n" + messageText,
+                text: responseText,
                 cancellationToken: cancellationToken);
         }
 

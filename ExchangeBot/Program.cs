@@ -29,7 +29,8 @@ namespace ExchangeBot
                 AllowedUpdates = Array.Empty<UpdateType>() // receive all update types
             };
 
-            var messageHandler = new MessageHandler();
+            var dataRetriever = new DataRetriever();
+            var messageHandler = new MessageHandler(dataRetriever);
 
             botClient.StartReceiving(
                 updateHandler: messageHandler.HandleUpdateAsync,

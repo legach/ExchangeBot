@@ -3,37 +3,63 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ExchangeBot.Companies;
 
 namespace ExchangeBot
 {
     public class DataRetriever
     {
-        private List<Rate> rates;
+        private List<Rate> _rates;
+        private readonly List<IExchangeCompanyRetriever> _companyRetrievers;
+
+        public DataRetriever()
+        {
+            _rates = new List<Rate>();
+            _companyRetrievers = new List<IExchangeCompanyRetriever>()
+            {
+                new AltaPay(),
+            };
+        }
 
         public List<Rate> GetAllRates()
         {
-            if (!rates.Any())
-            {
-                rates = FillRates();
-            }
+            //if (!_rates.Any())
+            //{
+                _rates = FillRates();
+            //}
 
-            return rates;
+            return _rates;
         }
 
         private List<Rate> FillRates()
         {
-            throw new NotImplementedException();
+            var list = new List<Rate>();
+            var taskList = new List<Task>();
+            foreach (var exchangeCompanyRetriever in _companyRetrievers)
+            {
+                var task = exchangeCompanyRetriever.GetRate().ContinueWith(r =>
+                {
+                    if (r.IsCompletedSuccessfully)
+                    {
+                        list.Add(r.Result);
+                    }
+                });
+                taskList.Add(task);
+            }
+
+            Task.WaitAll(taskList.ToArray());
+            return list;
         }
 
         public Rate GetMaximumBuysRate(Currency currency)
         {
-            var rate = rates.MaxBy(r => r.Buys[currency]);
+            var rate = _rates.MaxBy(r => r.Buys[currency]);
             return rate;
         }
 
         public Rate GetMinimumSalesRate(Currency currency)
         {
-            var rate = rates.MinBy(r => r.Sales[currency]);
+            var rate = _rates.MinBy(r => r.Sales[currency]);
             return rate;
         }
     }
