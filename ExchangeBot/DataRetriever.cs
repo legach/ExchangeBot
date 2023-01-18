@@ -52,23 +52,23 @@ namespace ExchangeBot
             return list;
         }
 
-        public Rate GetMaximumBuysRate(Currency currency)
+        public Rate? GetMaximumBuysRate(Currency currency)
         {
             if (!_rates.Any())
             {
                 _rates = FillRates();
             }
-            var rate = _rates.MaxBy(r => r.Buys[currency]);
+            var rate = _rates.Where(r => r.Buys.ContainsKey(currency)).MaxBy(r => r.Buys[currency]);
             return rate;
         }
 
-        public Rate GetMinimumSalesRate(Currency currency)
+        public Rate? GetMinimumSalesRate(Currency currency)
         {
             if (!_rates.Any())
             {
                 _rates = FillRates();
             }
-            var rate = _rates.MinBy(r => r.Sales[currency]);
+            var rate = _rates.Where(r=>r.Sales.ContainsKey(currency)).MinBy(r => r.Sales[currency]);
             return rate;
         }
     }

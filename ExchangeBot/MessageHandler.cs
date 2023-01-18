@@ -7,16 +7,22 @@ using System.Threading.Tasks;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 
 namespace ExchangeBot
 {
     public class MessageHandler
     {
         private readonly DataRetriever _dataRetriever;
+        private Dictionary<string, (DateTime timestamp, object value)> _cache;
+        private TimeSpan _cachePeriod;
+
 
         public MessageHandler(DataRetriever dataRetriever)
         {
+            _cache = new Dictionary<string, (DateTime, object)>();
             _dataRetriever = dataRetriever;
+            _cachePeriod = TimeSpan.FromHours(3);
         }
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -32,36 +38,44 @@ namespace ExchangeBot
 
             Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
 
-            var responseText = "Sorry, I don't understand you :(";
-            if (messageText == "/getAll")
+            var responseText = "Sorry, I don't understand you :\\(";
+            try
             {
-                try
+                switch (messageText)
                 {
-                    var rates = _dataRetriever.GetAllRates();
-                    responseText = string.Join("\n", rates.Select(r => $"{r.Company.Name} Sale:{r.Sales[Currency.Euro]}"));
-                }
-                catch (Exception e)
-                {
-                    responseText = "Sorry, I have an internal problem :(";
-                }
-            } else if (messageText == "/getEuroDeal")
-            {
-                try
-                {
-                    var salesRate = _dataRetriever.GetMinimumSalesRate(Currency.Euro);
-                    responseText = $"Minimum sale: \n {salesRate.Sales[Currency.Euro]} in {salesRate.Company.Name}";
-                    var buyRate = _dataRetriever.GetMaximumBuysRate(Currency.Euro);
-                    responseText += $"\nMaximum buy: \n {buyRate.Buys[Currency.Euro]} in {buyRate.Company.Name}";
-                }
-                catch (Exception e)
-                {
-                    responseText = "Sorry, I have an internal problem :(";
+                    case "/getAll":
+                        responseText = "*Buy/Sale*\n";
+                        responseText += string.Join("\n", GetAllRates().Select(r => r));
+                        break;
+                    case "/getEuroAll":
+                        responseText = "*Buy/Sale*\n";
+                        responseText += string.Join("\n", GetAllRates().Select(r => r.ToString(Currency.Euro)));
+                        break;
+                    case "/getUsdAll":
+                        responseText = "*Buy/Sale*\n";
+                        responseText += string.Join("\n", GetAllRates().Select(r => r.ToString(Currency.Usd)));
+                        break;
+                    case "/getEuroDeal":
+                        responseText = $"Minimum sale: \n {GetMinimumSalesRate(Currency.Euro)?.ToString(Currency.Euro) ?? "Unknown"} ";
+                        responseText += $"\nMaximum buy: \n {GetMaximumBuysRate(Currency.Euro)?.ToString(Currency.Euro) ?? "Unknown"}";
+                        break;
+                    case "/getUsdDeal":
+                        responseText = $"Minimum sale: \n {GetMinimumSalesRate(Currency.Usd)?.ToString(Currency.Usd) ?? "Unknown"} ";
+                        responseText += $"\nMaximum buy: \n {GetMaximumBuysRate(Currency.Usd)?.ToString(Currency.Usd) ?? "Unknown"}";
+                        break;
                 }
             }
+            catch (Exception e)
+            {
+                responseText = "Sorry, I have an internal problem :\\(";
+            }
+            
             
             Message sentMessage = await botClient.SendTextMessageAsync(
                 chatId: chatId,
+                parseMode:ParseMode.MarkdownV2,
                 text: responseText,
+                disableWebPagePreview:true,
                 cancellationToken: cancellationToken);
         }
 
@@ -76,6 +90,62 @@ namespace ExchangeBot
 
             Console.WriteLine(ErrorMessage);
             return Task.CompletedTask;
+        }
+
+        private List<Rate> GetAllRates()
+        {
+            var key = nameof(GetAllRates);
+            var result = new List<Rate>();
+            if (_cache.ContainsKey(key) && ((DateTime.Now - _cache[key].timestamp) <= _cachePeriod))
+            {
+                result = _cache[key].value as List<Rate>;
+            }
+
+            if (result != null && result.Any()) 
+                return result;
+
+            result = _dataRetriever.GetAllRates();
+            _cache.Add(key,(DateTime.Now, result));
+
+            return result;
+        }
+
+        private Rate? GetMinimumSalesRate(Currency currency)
+        {
+            var key = nameof(GetMinimumSalesRate) + currency;
+            Rate? result = null;
+            if (_cache.ContainsKey(key) && ((DateTime.Now - _cache[key].timestamp) <= _cachePeriod))
+            {
+                result = _cache[key].value as Rate;
+            }
+
+            if (result != null) 
+                return result;
+            
+            result = _dataRetriever.GetMinimumSalesRate(currency);
+            if (result != null)
+                _cache.Add(key,(DateTime.Now, result));
+
+            return result;
+        }
+
+        private Rate? GetMaximumBuysRate(Currency currency)
+        {
+            var key = nameof(GetMaximumBuysRate) + currency;
+            Rate? result = null;
+            if (_cache.ContainsKey(key) && ((DateTime.Now - _cache[key].timestamp) <= _cachePeriod))
+            {
+                result = _cache[key].value as Rate;
+            }
+
+            if (result != null)
+                return result;
+
+            result = _dataRetriever.GetMaximumBuysRate(currency);
+            if (result != null)
+                _cache.Add(key, (DateTime.Now, result));
+
+            return result;
         }
     }
 }
