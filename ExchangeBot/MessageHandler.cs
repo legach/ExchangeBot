@@ -44,7 +44,19 @@ namespace ExchangeBot
                 {
                     responseText = "Sorry, I have an internal problem :(";
                 }
-
+            } else if (messageText == "/getEuroDeal")
+            {
+                try
+                {
+                    var salesRate = _dataRetriever.GetMinimumSalesRate(Currency.Euro);
+                    responseText = $"Minimum sale: \n {salesRate.Sales[Currency.Euro]} in {salesRate.Company.Name}";
+                    var buyRate = _dataRetriever.GetMaximumBuysRate(Currency.Euro);
+                    responseText += $"\nMaximum buy: \n {buyRate.Buys[Currency.Euro]} in {buyRate.Company.Name}";
+                }
+                catch (Exception e)
+                {
+                    responseText = "Sorry, I have an internal problem :(";
+                }
             }
             
             Message sentMessage = await botClient.SendTextMessageAsync(

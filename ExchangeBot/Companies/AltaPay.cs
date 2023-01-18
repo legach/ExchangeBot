@@ -19,11 +19,7 @@ namespace ExchangeBot.Companies
         public string RatePage => "https://www.altapay.rs/json/lista.json";//https://www.altapay.rs/json/lista.json?_=1673992871377
         public async Task<Rate> GetRate()
         {
-            var rate = new Rate();
-            rate.Company = this;
-            rate.Buys = new Dictionary<Currency, double>();
-            rate.Sales = new Dictionary<Currency, double>();
-            rate.Timestamp = DateTime.Now;
+            var rate = new Rate(this);
 
             using (var client = new HttpClient())
             {

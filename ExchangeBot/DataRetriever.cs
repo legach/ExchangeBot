@@ -18,6 +18,7 @@ namespace ExchangeBot
             _companyRetrievers = new List<IExchangeCompanyRetriever>()
             {
                 new AltaPay(),
+                new Panter()
             };
         }
 
@@ -53,12 +54,20 @@ namespace ExchangeBot
 
         public Rate GetMaximumBuysRate(Currency currency)
         {
+            if (!_rates.Any())
+            {
+                _rates = FillRates();
+            }
             var rate = _rates.MaxBy(r => r.Buys[currency]);
             return rate;
         }
 
         public Rate GetMinimumSalesRate(Currency currency)
         {
+            if (!_rates.Any())
+            {
+                _rates = FillRates();
+            }
             var rate = _rates.MinBy(r => r.Sales[currency]);
             return rate;
         }

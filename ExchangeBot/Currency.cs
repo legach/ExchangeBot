@@ -2,6 +2,6 @@
 
 public enum Currency
 {
-    Dollar,
+    Usd,
     Euro
 }
