@@ -41,25 +41,25 @@ namespace ExchangeBot
             var responseText = "Sorry, I don't understand you :\\(";
             try
             {
-                switch (messageText)
+                switch (messageText.ToLower())
                 {
-                    case "/getAll":
+                    case "/getall":
                         responseText = "*Buy/Sale*\n";
                         responseText += string.Join("\n", GetAllRates().Select(r => r));
                         break;
-                    case "/getEuroAll":
+                    case "/geteuroall":
                         responseText = "*Buy/Sale*\n";
                         responseText += string.Join("\n", GetAllRates().Select(r => r.ToString(Currency.Euro)));
                         break;
-                    case "/getUsdAll":
+                    case "/getusdall":
                         responseText = "*Buy/Sale*\n";
                         responseText += string.Join("\n", GetAllRates().Select(r => r.ToString(Currency.Usd)));
                         break;
-                    case "/getEuroDeal":
+                    case "/geteurodeal":
                         responseText = $"Minimum sale: \n {GetMinimumSalesRate(Currency.Euro)?.ToString(Currency.Euro) ?? "Unknown"} ";
                         responseText += $"\nMaximum buy: \n {GetMaximumBuysRate(Currency.Euro)?.ToString(Currency.Euro) ?? "Unknown"}";
                         break;
-                    case "/getUsdDeal":
+                    case "/getusddeal":
                         responseText = $"Minimum sale: \n {GetMinimumSalesRate(Currency.Usd)?.ToString(Currency.Usd) ?? "Unknown"} ";
                         responseText += $"\nMaximum buy: \n {GetMaximumBuysRate(Currency.Usd)?.ToString(Currency.Usd) ?? "Unknown"}";
                         break;

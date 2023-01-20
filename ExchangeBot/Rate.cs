@@ -28,7 +28,7 @@ public class Rate
             var buyRate = Buys.ContainsKey(salesKey) ? Buys[salesKey] : 0 ;
             rates += $"{salesKey}: {buyRate} / {Sales[salesKey]}\n";
         }
-        return $"{company}\n{rates}";
+        return $"{company}\n{rates}".Replace(".", "\\."); ;
     }
 
     public string ToString(Currency currency)
@@ -37,8 +37,8 @@ public class Rate
         var rates = string.Empty;
         var buyRate = Buys.ContainsKey(currency) ? Buys[currency] : 0;
         var saleRate = Sales.ContainsKey(currency) ? Sales[currency] : 0;
-        rates += $"{currency}: {buyRate}/{saleRate}\n";
-        return $"{company}\n{rates}";
+        rates += $"{currency}: {buyRate} / {saleRate}\n";
+        return $"{company}\n{rates}".Replace(".","\\.");
     }
 
 }

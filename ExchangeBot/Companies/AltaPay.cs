@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -29,12 +30,16 @@ namespace ExchangeBot.Companies
                     var contentResponse = await response.Content.ReadAsStringAsync();
                     try
                     {
+                        IFormatProvider provider = new NumberFormatInfo()
+                        {
+                            NumberDecimalSeparator = ","
+                        };
                         dynamic content = JsonConvert.DeserializeObject(contentResponse);
                         var euroSales = content[0]["prodajni"].ToString();
-                        rate.Sales.Add(Currency.Euro, Double.Parse(euroSales));
+                        rate.Sales.Add(Currency.Euro, Double.Parse(euroSales, NumberStyles.Float,provider));
 
                         var euroBuy = content[0]["kupovni"].ToString();
-                        rate.Buys.Add(Currency.Euro, Double.Parse(euroBuy));
+                        rate.Buys.Add(Currency.Euro, Double.Parse(euroBuy,NumberStyles.Float, provider));
                     }
                     catch (JsonException e)
                     {

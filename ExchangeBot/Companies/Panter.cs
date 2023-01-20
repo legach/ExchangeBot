@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -48,16 +49,20 @@ namespace ExchangeBot.Companies
                 var match = regexp.Match(content);
                 if (match.Success)
                 {
+                    IFormatProvider provider = new NumberFormatInfo()
+                    {
+                        NumberDecimalSeparator = ","
+                    };
                     var buyString = match.Groups["buy"].Value;
                     if (!string.IsNullOrWhiteSpace(buyString))
                     {
-                        rate.Buys.Add(currency, Double.Parse(buyString.Trim()));
+                        rate.Buys.Add(currency, Double.Parse(buyString.Trim(), NumberStyles.Float, provider));
                     }
 
                     var sellString = match.Groups["sell"].Value;
                     if (!string.IsNullOrWhiteSpace(sellString))
                     {
-                        rate.Sales.Add(currency, Double.Parse(sellString.Trim()));
+                        rate.Sales.Add(currency, Double.Parse(sellString.Trim(), NumberStyles.Float, provider));
                     }
                 }
             }
