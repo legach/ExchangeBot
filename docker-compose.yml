@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  exchangebot:
+    image: ${DOCKER_REGISTRY-}exchangebot
+    build:
+      context: .
+      dockerfile: ExchangeBot/Dockerfile

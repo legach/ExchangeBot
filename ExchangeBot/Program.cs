@@ -14,10 +14,13 @@ namespace ExchangeBot
     {
         static async Task Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .Build();
-            var apiKey = config["TgApiKey"];
+            var apiKey = Environment.GetEnvironmentVariable("TgApiKey");
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Console.WriteLine("Cant launch with empty api-key. Please check <TgApiKey> environment variable");
+                Console.ReadLine();
+                return;
+            }
 
             var botClient = new TelegramBotClient(apiKey);
 
